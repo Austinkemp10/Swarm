@@ -66,6 +66,10 @@
     <Compile Include="Assets\Scripts\AStar.cs" />
     <Compile Include="Assets\Scripts\AStarDebugger.cs" />
     <Compile Include="Assets\Scripts\AStarTile.cs" />
+    <Compile Include="Assets\Scripts\BFS.cs" />
+    <Compile Include="Assets\Scripts\BFSVisualize.cs" />
+    <Compile Include="Assets\Scripts\DFS.cs" />
+    <Compile Include="Assets\Scripts\DFSVisualize.cs" />
     <Compile Include="Assets\Scripts\Node.cs" />
     <Compile Include="Assets\Scripts\TileButton.cs" />
     <Compile Include="Assets\Scripts\VisualizeText.cs" />

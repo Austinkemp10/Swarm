@@ -4,11 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Transactions;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.Rendering;
 using UnityEngine.Tilemaps;
 using UnityEngine.UI;
 
-public enum TileType {START, GOAL, WATER, GRASS, PATH, STEP, COMPLETE, RESET, DEBUG}
+public enum TileType {START, GOAL, WATER, GRASS, ASTAR, BFS, BI, RESET}
+[Serializable]
 public class AStar : MonoBehaviour
 {
 
@@ -19,8 +21,18 @@ public class AStar : MonoBehaviour
      * ===============================================================================================*/
     private float delay = 0f;
     private bool pathExists = false;
+    private bool startExists = false;
+    private bool goalExists = false;
+
+    private bool goalFound = false;
+    private Node goalNode;
+
+    private Node start, end;
 
     private TileType tileType;
+
+    private List<Vector3Int> visited = new List<Vector3Int>();
+    private int[,] board = new int[17, 10];
 
     [SerializeField]
     private Tilemap tilemap;
@@ -53,13 +65,15 @@ public class AStar : MonoBehaviour
 
     private Dictionary<Vector3Int, Node> allNodes = new Dictionary<Vector3Int, Node>();
 
-
     /* =================================================================================================
      * End of global variables
      * ===============================================================================================*/
 
 
-
+    private void Start()
+    {
+        
+    }
 
 
     /* =================================================================================================
@@ -83,13 +97,47 @@ public class AStar : MonoBehaviour
             }
         }
 
-        if(Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Space))
         {
             //Run algorithm for A* with visualization
-
-            Algorithm();
+            delay = 0.0f;
+            current = null;
+            path = null;
+            AStarAlgorithm();
         }
+        else if (Input.GetKeyDown(KeyCode.UpArrow))
+        {
+            //Run algorithm for DFS with visualization
+            delay = 0.0f;
+            BiSearch(/*new Node(startPos), new Node(goalPos)*/);
+
+
+        } else if(Input.GetKeyDown(KeyCode.DownArrow))
+        {
+            //Run algorithm for BFS with visualization
+            delay = 0.0f;
+            BFSearch(/*new Node(startPos), new Node(goalPos)*/);
+
+        } else if(Input.GetKeyDown(KeyCode.C))
+        {
+            AStarDebugger.myInstance.clearBoard(openList, closedList, visited, path);
+        }
+
     }
+
+
+
+
+    /* =================================================================================================
+     * Function             :               clear
+     * Purpose              :               used to clear the board
+     * ===============================================================================================*/
+    public void clear()
+    {
+        delay = 0.0f;
+        AStarDebugger.myInstance.clearBoard(openList, closedList, visited, path);
+    }
+
 
 
 
@@ -99,6 +147,7 @@ public class AStar : MonoBehaviour
      * ===============================================================================================*/
     private void Init()
     {
+
         current = getNode(startPos);
 
         openList = new HashSet<Node>();
@@ -107,6 +156,7 @@ public class AStar : MonoBehaviour
 
         //1 Add start node to list
         openList.Add(current);
+
     }
 
 
@@ -117,9 +167,13 @@ public class AStar : MonoBehaviour
      * Function             :               Algorithm
      * Purpose              :               While there are items in the openList run the algorithm
      * ===============================================================================================*/
-    private void Algorithm()
+    public void AStarAlgorithm()
     {
-        
+        current = null;
+        path = null;
+        start = new Node(startPos);
+        end = new Node(goalPos);
+        delay = 0.0f;
         if (current == null)
         {
             Init();
@@ -127,15 +181,309 @@ public class AStar : MonoBehaviour
 
         int count = 0;
 
-        while(openList.Count > 0 && path == null)
+        while (openList.Count > 0 && path == null)
         {
+            Debug.Log("In while loop AStar");
             colorDelay();
              
             count++;
         }
+        
         StartCoroutine(AStarDebugger.myInstance.colorNeighbors(openList, closedList, neighbors, startPos, goalPos, delay, pathExists, path));
     }
 
+
+
+    /* =================================================================================================
+     * Function             :               bfs
+     * Purpose              :               function that drives the breadth first search
+     * ===============================================================================================*/
+    public void BFSearch()
+    {
+        delay = 0.0f;
+        start = new Node(startPos);
+        end = new Node(goalPos);
+
+
+        path = null;
+        Queue<Node> q = new Queue<Node>();
+        List<Node> unvisited = null;
+        Node c = null;
+        goalFound = false;
+        q.Enqueue(start);
+        visited.Add(new Vector3Int(start.Position.x, start.Position.y, start.Position.z));
+        Debug.Log("Start BFS");
+
+        while (q.Count > 0 && path == null && !goalFound)
+        {
+            Debug.Log("In while");
+            c = q.Dequeue();
+
+            if(c == null)
+            {
+                Debug.Log("Trouble~!");
+            }
+            unvisited = getAdjCells(c);
+            for (int i = 0; i < unvisited.Count; i++)
+            {
+                Debug.Log("In for");
+                if (unvisited.ElementAt(i).Position != goalPos && unvisited.ElementAt(i).Position != startPos)
+                {
+                    StartCoroutine(AStarDebugger.myInstance.bfsColor(unvisited.ElementAt(i).Position, Color.cyan, delay));
+                    delay = delay + 0.02f;
+                }
+                
+                if (unvisited.ElementAt(i).Position == goalPos)
+                {
+                    goalFound = true;
+                    Debug.Log("Path found");
+                    break;
+                }
+                if (unvisited != null)
+                {
+
+                    unvisited.ElementAt(i).parent = c;
+                    if (c.Position != goalPos && c.Position != startPos)
+                    {
+                        StartCoroutine(AStarDebugger.myInstance.bfsColor(c.Position, Color.blue, delay));
+                        delay = delay + 0.02f;
+                    }
+                    
+                    q.Enqueue(unvisited.ElementAt(i));
+                }
+                else
+                {
+                    if (q.Count > 0)
+                    {
+                        q.Dequeue();
+                    }
+
+                }
+            }
+            
+        }
+        if(goalFound)
+        {
+            Debug.Log("Goal Found");
+            while ((c != null) && (c != start))
+            {
+                if (c.Position != goalPos)
+                {
+                    StartCoroutine(AStarDebugger.myInstance.bfsColor(c.Position, Color.red, delay));
+                    c = c.parent;
+                }
+
+            }
+        }
+        
+
+        visited.Clear();
+    }
+
+
+
+    private List<Node> getAdjCells(Node node)
+    {
+        int[,] moves = { { -1, 0 }, { 0, -1 }, { 1, 0 }, { 0, 1 }, { -1, 1 }, { -1, -1 }, { 1, -1 }, { 1, 1 } };
+        List<Node> neighbors = new List<Node>();
+
+        for(int n = 0; n < 8; n++)
+        {
+            int xVal = node.Position.x + moves[n, 0];
+            int yVal = node.Position.y + moves[n, 1];
+            if(xVal + 8 >= 0 && xVal + 8 <= 17 && yVal + 5 >= 0 && yVal + 5 <= 9)
+            {
+                Vector3Int neighborPos = new Vector3Int(node.Position.x + moves[n, 0], node.Position.y + moves[n, 1], node.Position.z);
+
+                if (neighborPos != startPos && tilemap.GetTile(neighborPos) && !waterTiles.Contains(neighborPos) && !visited.Contains(neighborPos) && connectedDiagonally(node, getNode(neighborPos)))
+                {
+                    visited.Add(neighborPos);
+                    neighbors.Add(new Node(neighborPos));
+
+                }
+            }
+            
+        }
+
+        return neighbors;
+    }
+
+
+
+
+    private List<Node> getBiAdjCells(Node node, HashSet<Vector3Int> biVisited)
+    {
+        int[,] moves = { { -1, 0 }, { 0, -1 }, { 1, 0 }, { 0, 1 }, { -1, 1 }, { -1, -1 }, { 1, -1 }, { 1, 1 } };
+        List<Node> neighbors = new List<Node>();
+
+        for (int n = 0; n < 8; n++)
+        {
+            int xVal = node.Position.x + moves[n, 0];
+            int yVal = node.Position.y + moves[n, 1];
+            if (xVal + 8 >= 0 && xVal + 8 <= 17 && yVal + 5 >= 0 && yVal + 5 <= 9)
+            {
+                Vector3Int neighborPos = new Vector3Int(node.Position.x + moves[n, 0], node.Position.y + moves[n, 1], node.Position.z);
+
+                if (neighborPos != startPos && tilemap.GetTile(neighborPos) && !waterTiles.Contains(neighborPos) && !biVisited.Contains(neighborPos) && connectedDiagonally(node, getNode(neighborPos)))
+                {
+                    visited.Add(neighborPos);
+                    neighbors.Add(new Node(neighborPos));
+
+                }
+            }
+
+        }
+
+        return neighbors;
+    }
+
+
+    /* =================================================================================================
+     * Function             :               DFSearch
+     * Purpose              :               function that drives the depth first search
+     * ===============================================================================================*/
+    public void BiSearch()
+    {
+        //Reset status
+        delay = 0.0f;
+        start = new Node(startPos);
+        end = new Node(goalPos);
+
+        Queue<Node> q1 = new Queue<Node>();
+        Queue<Node> q2 = new Queue<Node>();
+
+        HashSet<Node> startVisit = new HashSet<Node>();
+        HashSet<Node> goalVisit = new HashSet<Node>();
+
+        HashSet<Vector3Int> visited1 = new HashSet<Vector3Int>();
+        HashSet<Vector3Int> visited2 = new HashSet<Vector3Int>();
+
+        Node foundStart = null;
+        Node foundGoal = null;
+        
+        goalFound = false;
+        
+        q1.Enqueue(start);
+        q2.Enqueue(end);
+        
+        Debug.Log("Start Bi-Directional");
+
+        visited1.Add(start.Position);
+        visited2.Add(end.Position);
+
+        //While we have something in the queue and we haven't found the goal
+        while (q1.Count > 0 || q2.Count > 0 && !goalFound)
+        {
+
+            //For each of the neighbors
+            if (q1.Count > 0 && foundStart == null)
+            {
+                Node next = q1.Dequeue();
+
+                List<Node> unvisited1 = getBiAdjCells(next, visited1);
+
+                foreach (Node adjacent in unvisited1)
+                {
+                    adjacent.parent = next;
+                    startVisit.Add(adjacent);
+                    if(adjacent.Position != end.Position)
+                    {
+                        StartCoroutine(AStarDebugger.myInstance.bfsColor(adjacent.Position, Color.blue, delay));
+                        delay = delay + 0.05f;
+                    }
+                    
+                    if (visited2.Contains(adjacent.Position))
+                    {
+                        goalFound = true;
+                        foundStart = adjacent;
+                        while (foundStart != start)
+                        {
+                            Debug.Log(foundStart.parent);
+                            StartCoroutine(AStarDebugger.myInstance.bfsColor(foundStart.Position, Color.red, delay));
+                            //delay = delay + 0.05f;
+                            foundStart = foundStart.parent;
+                        }
+
+                        foreach (Node x in goalVisit)
+                        {
+                            if (x.Position.x == adjacent.Position.x && x.Position.y == adjacent.Position.y)
+                            {
+                                foundGoal = x;
+                            }
+                        }
+                        if (foundGoal != null)
+                        {
+                            while (foundGoal != start && foundGoal != end)
+                            {
+                                StartCoroutine(AStarDebugger.myInstance.bfsColor(foundGoal.Position, Color.red, delay));
+                                //delay = delay + 0.05f;
+                                foundGoal = foundGoal.parent;
+                            }
+                        }
+                        return;
+                    }
+                    else if (visited1.Add(adjacent.Position))
+                    {
+                        q1.Enqueue(adjacent);
+                    }
+                }
+            }
+
+            if (q2.Count > 0)
+            {
+                Node next = q2.Dequeue();
+
+                List<Node> unvisited2 = getBiAdjCells(next, visited2);
+
+                foreach (Node adjacent in unvisited2)
+                {
+                    adjacent.parent = next;
+                    goalVisit.Add(adjacent);
+                    if (adjacent.Position != end.Position)
+                    {
+                        StartCoroutine(AStarDebugger.myInstance.bfsColor(adjacent.Position, Color.blue, delay));
+                        delay = delay + 0.05f;
+                    }
+                    if (visited1.Contains(adjacent.Position))
+                    {
+                        goalFound = true;
+                        foundGoal = adjacent;
+                        foreach(Node x in startVisit)
+                        {
+                            if(x.Position.x == adjacent.Position.x && x.Position.y == adjacent.Position.y)
+                            {
+                                foundStart = x;
+                            }
+                        }
+                        if(foundStart != null)
+                        {
+                            while (foundStart != start)
+                            {
+                                StartCoroutine(AStarDebugger.myInstance.bfsColor(foundStart.Position, Color.red, delay));
+                                //delay = delay + 0.05f;
+                                foundStart = foundStart.parent;
+                            }
+                        }
+                        
+
+                        while (foundGoal != end)
+                        {
+                            Debug.Log(foundGoal.parent);
+                            StartCoroutine(AStarDebugger.myInstance.bfsColor(foundGoal.Position, Color.red, delay));
+                            //delay = delay + 0.05f;
+                            foundGoal = foundGoal.parent;
+                        }
+                        return;
+                    }
+                    else if (visited2.Add(adjacent.Position))
+                    {
+                        q2.Enqueue(adjacent);
+                    }
+                }
+            }
+
+        }
+    }
 
 
 
@@ -181,7 +529,7 @@ public class AStar : MonoBehaviour
 
                 if(y != 0 || x != 0)
                 {
-                    if(neighborPos != startPos && tilemap.GetTile(neighborPos) && !waterTiles.Contains(neighborPos))
+                    if(neighborPos != startPos && tilemap.GetTile(neighborPos) && !waterTiles.Contains(neighborPos) && connectedDiagonally(current, getNode(neighborPos)))
                     {
                         //Cant be parent
                         Node neighbor = getNode(neighborPos);
@@ -193,7 +541,7 @@ public class AStar : MonoBehaviour
         }
 
         StartCoroutine(AStarDebugger.myInstance.colorNeighbors(openList, closedList, neighbors, startPos, goalPos, delay, pathExists, path));
-        delay++;
+        delay = delay + 0.1f;
         return neighbors;
 
     }
@@ -236,6 +584,8 @@ public class AStar : MonoBehaviour
             }
         }
     }
+
+
 
 
     /* =================================================================================================
@@ -329,21 +679,30 @@ public class AStar : MonoBehaviour
         //Set tile to selected button
         tileType = button.myTileType;
 
-        if(tileType == TileType.STEP)
+        if (tileType == TileType.ASTAR)
         {
-            //Nothing yet
+            delay = 0.0f;
+            current = null;
+            path = null;
+            AStarAlgorithm();
+
         }
-        else if(tileType == TileType.COMPLETE)
+
+        if (tileType == TileType.BFS)
         {
-            //Nothing yet
+            delay = 0.0f;
+            BFSearch(/*new Node(startPos), new Node(goalPos)*/);
         }
-        else if(tileType == TileType.RESET)
+
+        if (tileType == TileType.BI)
         {
-            tilemap.ClearAllTiles();
+            delay = 0.0f;
+            BiSearch(/*new Node(startPos), new Node(goalPos)*/);
         }
-        else if(tileType == TileType.DEBUG)
+
+        if (tileType == TileType.RESET)
         {
-            Algorithm();
+            AStarDebugger.myInstance.clearBoard(openList, closedList, visited, path);
         }
     }
 
@@ -363,17 +722,67 @@ public class AStar : MonoBehaviour
         } else
         {
 
-            if(tileType == TileType.START)
+            if (tileType == TileType.START)
             {
-                startPos = clickPos;
-            } else if (tileType == TileType.GOAL)
+                //Check if start is on map anywhere
+                if (!startExists)
+                {
+                    startPos = clickPos;
+                    startExists = true;
+                    start = new Node(startPos);
+                }
+                else
+                {
+                    tilemap.SetTile(startPos, tiles[3]);
+                    startPos = clickPos;
+                    startExists = true;
+                }
+            }
+            else if (tileType == TileType.GOAL)
             {
-                goalPos = clickPos;
+                if (!goalExists)
+                {
+                    goalPos = clickPos;
+                    goalExists = true;
+                    end = new Node(goalPos);
+                }
+                else
+                {
+                    tilemap.SetTile(goalPos, tiles[3]);
+                    goalPos = clickPos;
+                    goalExists = true;
+                }
             }
             tilemap.SetTile(clickPos, tiles[(int)tileType]);
         }
-        
-        
+
+        if(tileType == TileType.ASTAR)
+        {
+            delay = 0.0f;
+            current = null;
+            path = null;
+            AStarAlgorithm();
+
+        }
+
+        if(tileType == TileType.BFS)
+        {
+            delay = 0.0f;
+            BFSearch(/*new Node(startPos), new Node(goalPos)*/);
+        }
+
+        if (tileType == TileType.BI)
+        {
+            delay = 0.0f;
+            BiSearch(/*new Node(startPos), new Node(goalPos)*/);
+        }
+
+        if (tileType == TileType.RESET)
+        {
+            AStarDebugger.myInstance.clearBoard(openList, closedList, visited, path);
+        }
+
+
     }
 
 
@@ -387,9 +796,9 @@ public class AStar : MonoBehaviour
     {
         Vector3Int direct = currentNode.Position - neighbor.Position;
 
-        Vector3Int first = new Vector3Int(current.Position.x + (direct.x * -1), current.Position.y, current.Position.z);
+        Vector3Int first = new Vector3Int(currentNode.Position.x + (direct.x * -1), currentNode.Position.y, currentNode.Position.z);
 
-        Vector3Int second = new Vector3Int(current.Position.x, current.Position.y + (direct.y * -1), current.Position.z);
+        Vector3Int second = new Vector3Int(currentNode.Position.x, currentNode.Position.y + (direct.y * -1), currentNode.Position.z);
 
         if(waterTiles.Contains(first) || waterTiles.Contains(second))
         {
@@ -397,7 +806,6 @@ public class AStar : MonoBehaviour
         }
         return true;
     }
-
 
 
     /* =================================================================================================
@@ -422,4 +830,34 @@ public class AStar : MonoBehaviour
         return null;
         
     }
+
+
+
+
+    /* =================================================================================================
+     * Function             :               generateBiPath
+     * Purpose              :               Returns the optimal pathh
+     * ===============================================================================================*/
+    private Stack<Vector3Int> generateBiPath(Node start, Node end)
+    {
+        if(start != null)
+        {
+            Stack<Vector3Int> finalPath = new Stack<Vector3Int>();
+
+            while (start.Position != end.Position)
+            {
+                finalPath.Push(start.Position);
+
+                start = start.parent;
+            }
+            return finalPath;
+        }
+
+        return null;
+
+    }
+
+
+
+
 }

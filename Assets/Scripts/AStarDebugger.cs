@@ -115,13 +115,13 @@ public class AStarDebugger : MonoBehaviour
 
         foreach (Node n in neighbors)
         {
-            if (n.Position != start && n.Position != goal && openList.Contains(n))
-            {
-                colorTile(n.Position, openColor);
-            }          
-            else if (n.Position != start && n.Position != goal && closedList.Contains(n))
+            if (n.Position != start && n.Position != goal && closedList.Contains(n))
             {
                 colorTile(n.Position, closedColor);
+            }          
+            else if (n.Position != start && n.Position != goal && openList.Contains(n))
+            {
+                colorTile(n.Position, openColor);
             }
         }
 
@@ -133,11 +133,54 @@ public class AStarDebugger : MonoBehaviour
                 if (pos != start && pos != goal)
                 {
                     tilemap.RefreshTile(pos);
-                    Debug.Log("x: " + pos.x + "   y: " + pos.y);
-                    colorTile(pos, pathColor);
+                    colorTile(pos, Color.red);
                 }
             }
 
         }
     }
+
+
+
+    public IEnumerator bfsColor(Vector3Int position, Color color, float count)
+    {
+        yield return new WaitForSeconds(count);
+
+        tilemap.SetTile(position, tile);
+        tilemap.SetTileFlags(position, TileFlags.None);
+        tilemap.SetColor(position, color);
+    }
+
+
+    /* =================================================================================================
+     * Function             :               clearBoard
+     * Purpose              :               Clears the game board and resets the state for another algorithm to run
+     * ===============================================================================================*/
+
+    public void clearBoard(HashSet<Node> openList, HashSet<Node> closedList, List<Vector3Int> visited, Stack<Vector3Int> path = null)
+    {
+
+        if (openList != null)
+        {
+            openList.Clear();
+
+        }
+
+        if(closedList != null)
+        {
+            closedList.Clear();
+        }
+        
+        if(path != null)
+        {
+            path.Clear();
+        }
+        
+        if(visited != null)
+        {
+            visited.Clear();
+        }
+        tilemap.ClearAllTiles();
+    }
+
 }

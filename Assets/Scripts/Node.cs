@@ -9,10 +9,17 @@ public class Node
     public int F { get; set; }
     public Node parent { get; set; }
 
+    public bool visited { get; set; }
+
     public Vector3Int Position {get; set;}
 
     public Node(Vector3Int position)
     {
         this.Position = position;
+    }
+    public Node(Vector3Int position, Node newParent)
+    {
+        this.Position = position;
+        this.parent = newParent;
     }
 }

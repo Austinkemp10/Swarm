@@ -298,7 +298,7 @@ GameObject:
   - component: {fileID: 52668988}
   - component: {fileID: 52668987}
   m_Layer: 5
-  m_Name: Step
+  m_Name: AStar
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -367,12 +367,12 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_MethodName: 
-        m_Mode: 2
+      - m_Target: {fileID: 1798812122}
+        m_MethodName: AStarAlgorithm
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: TileButton, Assembly-CSharp
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -639,8 +639,8 @@ MonoBehaviour:
   tilemap: {fileID: 127957577}
   tile: {fileID: 11400000, guid: b16e2c3861c03394f808c520d49714cb, type: 2}
   openColor: {r: 0, g: 0.14503145, b: 1, a: 1}
-  closedColor: {r: 1, g: 0, b: 0.90161705, a: 1}
-  pathColor: {r: 1, g: 0.46515495, b: 0, a: 1}
+  closedColor: {r: 0, g: 0.49818873, b: 1, a: 1}
+  pathColor: {r: 1, g: 0.8275918, b: 0, a: 1}
   currentColor: {r: 0, g: 0, b: 0, a: 0}
   startColor: {r: 0.020717109, g: 0.5471698, b: 0, a: 1}
   goalColor: {r: 0.7921569, g: 0.03416438, b: 0.003921591, a: 1}
@@ -900,7 +900,7 @@ GameObject:
   - component: {fileID: 645205914}
   - component: {fileID: 645205913}
   m_Layer: 5
-  m_Name: Complete
+  m_Name: BFS
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -969,12 +969,12 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_MethodName: 
-        m_Mode: 2
+      - m_Target: {fileID: 1798812122}
+        m_MethodName: BFSearch
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: TileButton, Assembly-CSharp
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -1316,7 +1316,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: dfd1eefee70ff634e90ce1107b2d7534, type: 3}
+  m_Sprite: {fileID: 21300000, guid: d3315e89c6fcfb6438f3b952cc4ff0a7, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1390,7 +1390,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: d3315e89c6fcfb6438f3b952cc4ff0a7, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 1a56c3b78123d53439577de32d938e1d, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1970,7 +1970,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 3d1fd32913e0cef478a718da5819b214, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6f75c5882fe32d540af9c7218e5bab2d, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -2001,7 +2001,7 @@ GameObject:
   - component: {fileID: 1459134508}
   - component: {fileID: 1459134507}
   m_Layer: 5
-  m_Name: Debug
+  m_Name: Clear
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2066,16 +2066,16 @@ MonoBehaviour:
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
   m_Interactable: 1
-  m_TargetGraphic: {fileID: 1459134508}
+  m_TargetGraphic: {fileID: 1715536143}
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_MethodName: 
-        m_Mode: 2
+      - m_Target: {fileID: 1798812122}
+        m_MethodName: clear
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: TileButton, Assembly-CSharp
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -2248,7 +2248,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 3e9e09bc0b9573b42972a3d287fcf0e1, type: 3}
+  m_Sprite: {fileID: 21300000, guid: c7aa4af9d25d10745a324817feb05981, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -2279,7 +2279,7 @@ GameObject:
   - component: {fileID: 1715536143}
   - component: {fileID: 1715536142}
   m_Layer: 5
-  m_Name: Reset
+  m_Name: Bi
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2348,12 +2348,12 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_MethodName: 
-        m_Mode: 2
+      - m_Target: {fileID: 1798812122}
+        m_MethodName: BiSearch
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: TileButton, Assembly-CSharp
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
